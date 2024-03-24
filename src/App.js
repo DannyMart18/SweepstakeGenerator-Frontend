@@ -48,22 +48,42 @@ const App = () => {
     const generateSweepstake = async () => {
         try {
             const response = await axios.post('https://localhost:7105/Sweepstake', participants);
-            if (Array.isArray(response.data) && response.data.every(p => p.horses !== undefined)) {
+            // You might want to check for status code here as well
+            if (response.data) {
                 setResults(response.data);
-            } else {
-                console.error('Received data is not in the expected format:', response.data);
+                setError(''); // Clear any previous errors
             }
         } catch (error) {
-            console.error('Error generating sweepstake', error);
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx and error details are in error.response.data
+                setError(error.response.data || "An error occurred while generating the sweepstake.");
+            } else if (error.request) {
+                // The request was made but no response was received
+                setError("No response from the server. Please try again later.");
+            } else {
+                // Something happened in setting up the request that triggered an error
+                setError("An error occurred while setting up the request.");
+            }
         }
     };
+    
+    
+    
 
     return (
         <div className="container mt-5">
             <header className="header">
                 <Header />
             </header>
+            <div className="info-section my-4 p-3 bg-light border rounded">
+                <h2>How to Use</h2>
+                <p>Welcome to the Grand National Sweepstake Generator! Add participants with their desired number of horses, and then click "Generate Sweepstake" to see the results. You can edit or delete participants before generating the sweepstake.</p>
+            </div>
+
             <div className="content">
+            {error && <div className="alert alert-danger" role="alert">{error}</div>}
+
             <ParticipantForm onSubmit={addParticipant} />
             {participants.map((participant, index) => (
                 <div key={index} className="my-2">
